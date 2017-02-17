@@ -49,10 +49,12 @@ ctx.lineDashOffset
 //创建渐变
 ctx.createLinearGradient(x1, y1, x2, y2)
 ctx.createRadialGradient(x1, y1, r1, x2, y2, r2)
-gradient.addColorStop(position, color)
+gradient.addColorStop(position, color) //position: 0.0 - 1.0
 ```
 ```js
 //创建图案
+//image可以是一个Image对象的引用，或者是另一个canvas对象
+//type: repeat, repeat-x, repeat-y, no-repeat
 ctx.createPattern(image, type)
 ```
 ```js
@@ -92,7 +94,11 @@ ctx.drawImage(image, sx, sy, sWidth, sHeight, dx, dy, dWidth, dHeight) //切片
  */
 ctx.save() //保存状态
 ctx.restore() //恢复状态
-//移动
+//移动，旋转，缩放，变换
 ctx.translate(x, y)
-
+ctx.rotate(angle) //旋转的中心总是canvas的原点，所以要和translate搭配使用
+ctx.scale(x, y) //1.0为原始缩放
+ctx.transform(m11, m12, m21, m22, dx, dy)
+ctx.setTransform(m11, m12, m21, m22, dx, dy)
+ctx.resetTransform()
 ```
