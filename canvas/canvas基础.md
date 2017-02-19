@@ -102,3 +102,14 @@ ctx.transform(m11, m12, m21, m22, dx, dy)
 ctx.setTransform(m11, m12, m21, m22, dx, dy)
 ctx.resetTransform()
 ```
+
+# 组合
+```js
+ctx.globalCompositeOperation
+//source-over(default) destination-over 
+//source-in destination-in 
+//source-out destination-out 
+//source-atop destination-atop
+//lighter darken
+//xor copy
+```
