@@ -26,6 +26,8 @@ function findHandlers(el, selector, event, callback) {
 function removeEvent(el, selector, event, callback) {
     const {e: eventName} = parse(event);
 
+    if (!handlers.has(el)) return;
+    const elHandlers = handlers.get(el);
     const matchedHandlers = findHandlers(el, selector, event, callback);
     matchedHandlers.forEach(handler => {
         if (el.removeEventListener) {
@@ -33,6 +35,7 @@ function removeEvent(el, selector, event, callback) {
         } else {
             el.detachEvent('on' + eventName, handler.delegator || handler.callback);
         }
+        elHandlers.remove(handler);
     });
 }
 
