@@ -84,12 +84,12 @@ const Events = {
                 callback.apply(matched, [...arguments]);
             }
         };
-        this.on(el, selector, eventType, callback, delegator);
+        bindEvent(el, selector, eventType, callback, delegator);
     },
     undelegate(el, selector, eventType, callback) {
         removeEvent(el, selector, eventType, callback);
     },
-    fire(el, eventType, props) {
+    emit(el, eventType, props) {
         props || (props = {});
         props.bubbles || (props.bubbles = true);
         props.cancelable || (props.cancelable = true);
