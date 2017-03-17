@@ -2,6 +2,28 @@
 
 首先要明确两个概念，Range 和 Selection 不是一回事儿，Range 在浏览器中是看不见的，而 Selection 则是看得见的，就像用户选中的一段文字会变成蓝底白字。Range 的主要作用是操作 DOM。
 
+- Range
+```js
+//Range实例的属性
+collapsed, commonAncestorContainer, startContainer, startOffset, endContainer, endOffset
+//Range实例的方法
+//定位方法
+setStart(container, offset), setEnd(container, offset), setStartBefore, setStartAfter, setEndBefore, setEndAfter,
+selectNode, selectNodeContents, collapse
+//编辑方法
+cloneContents, extractContents, deleteContents, insertNode, surroundConntents,
+//其他方法
+compareBoundaryPoints, cloneRange, detach, toString
+```
+- Selection
+```js
+//属性
+anchorNode, anchorOffset, focusNode, focusOffset, isCollapsed, rangeCount
+//方法
+getRangeAt(index), collapse, extend, modify, collapseToStart, collapseToEnd, selectAllChildren, addRange, removeRange, removeAllRanges,
+deleteFromDocument, selectionLanguageChange, toString, containsNode,
+```
+
 - Range => Selection
 ```js
 //针对有value属性的元素
@@ -30,7 +52,7 @@ userSelection.addRange(range);
 
 - Selection => Range
 ```js
-//首先说怎么获取用户选择的内容
+//获取用户选择的内容
 let userSelection;
 if (window.getSelection) {
     userSelection = window.getSelection();
