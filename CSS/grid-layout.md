@@ -88,12 +88,12 @@ vertical-align
 ![](../Image/grid-layout/grid-cell-1-hover.png)  
 
 相信第一次看到这个结果的同学，一定会说 `WTF` 这样的话。我们来分析一下，为什么是这样的效果。  
-首先 `display:grid` 将 `.wrapper` 声明为一个网格容器，并且通过 `grid-template-rows` 和 `grip-template-columns` 属性设置了行列的‘模板’。这里我把 `100px 10px 100px 10px 100px` 和 `auto 10px auto` 叫做‘模板’，原因有二：首先，属性名里有个 `template`；其次，模板的意思是根据它能够批量生产，这里批量生产的东西就是单元格。行模板和列模板其实就是规定了有多少行多少列以及每一行和每一列的宽度是多少。  
+首先 `display:grid` 将 `.wrapper` 声明为一个网格容器，并且通过 `grid-template-rows` 和 `grip-template-columns` 属性设置了行列的‘模板’。这里我把 `100px 10px 100px 10px 100px` 和 `auto 10px auto` 叫做‘模板’，原因有二：首先，属性名里有个 `template`；其次，模板的意思是根据它能够批量生产，这里批量生产的东西就是单元格。行模板和列模板其实就是规定了有多少行多少列以及每一行和每一列的宽度是多少，这与上文中提到的‘网格轨道’的定义一致。  
 我们从效果图中可以看出，每一行都是由 5 个单元格组成的。其实字母 B D G I 就藏在红色的单元格里，只是宽度不够没有显示出来。就如‘模板’中所设置的，每一行由 5 个单元格构成，各个单元格的宽度为 `100px` 和 `10px` 交替。  
 再说第二行的高度为什么是 `40px`，行模板中设置的高度应该是 `10px`，但是由于 `padding:20px` 将高度撑开，也就造成了这样的结果。  
 机智的小伙伴们马上发现了这个解释的漏洞：如果第二行的高度可以由 `padding` 撑开，那么第二列的宽度也应该能够被 `padding` 撑开才对啊。  
 事实上，通过 _chrome_ 的调试工具我们发现，第二列的宽度确实是 `40px`，只不过只有 `10px` 显示了出来，剩余的部分藏在了相邻元素的后面。而第二行由于没有第三行遮挡，就表现为 `40px`。  
-看下图，我在下面又加了个 K，并用不同的背景色标识，大家应该能清除的看到第三行对第二行的遮挡。  
+看下图，我在下面又加了个 K，并用不同的背景色标识，大家应该能清楚地看到第三行对第二行的遮挡。  
 ![](../Image/grid-layout/grid-cell-2.png)  
 
 综上，可以明白这样一件事：划分出来的单元格只是一个个框框，我们可以把任意元素放到框框里，并且后面的框框会遮挡前面的框框。如果我们没有指定元素的大小（即 `auto`），它就会去自适应框框的大小，也就是填满这个框框。  
@@ -410,3 +410,102 @@ vertical-align
   grid-area: 9 / 1 / 10 / 6;
 }
 ```
+
+### METHOD 3
+
+我们还可以对行线和列线进行自定义命名，就像这样：  
+
+*css*
+```css
+.wrapper {
+  display: grid;
+  grid-template-columns: repeat(3, [column] 100px [gutter] 10px) [column] 100px [gutter];
+  grid-template-rows: repeat(4, [row] auto [gutter] 10px) [row] auto [gutter];
+}
+.box {
+  text-align: center;
+  background: #444;
+  color: #fff;
+  font-size: 150%;
+  padding: 20px;
+  box-sizing: content-box;
+}
+.a {
+  grid-column: column / gutter 3;
+}
+.b {
+  grid-column: column 4;
+  grid-row: row / gutter 5;
+  background: orange;
+}
+.c {
+  grid-row: row 2;
+}
+.d {
+  grid-column: column 2;
+  grid-row: row 2;
+}
+.e {
+  grid-column: column 3;
+  grid-row: row 2;
+}
+.f {
+  grid-column: column / gutter 2;
+  grid-row: row 3;
+}
+.g {
+  grid-column: column 3;
+  grid-row: row 3;
+}
+.h {
+  grid-row: row 4;
+}
+.i {
+  grid-column: column 2 / span gutter 2;
+  grid-row: row 4;
+}
+.j {
+  grid-column: column / gutter 3;
+  grid-row: row 5;
+}
+```
+
+这其中有很多小技巧：  
+- 定义行列模板的时候，在每一条轨道之间增加了行线和列线的自定义命名，用 `[]` 包裹起来。这个命名有什么用处呢？我们可以在 `grid-column` 和 `grid-row` 中通过这些名称引用那些行线和列线。我们还看到，自定义的命名是可以重复的，但这样的话如果像 `grid-column: column / column` 这样写，解释器根本就不会知道你指的是哪条线，于是我们可以通过在名称后面追加一个数字来指定我们具体是想引用哪条线。举个例子：`grid-column: column 1 / gutter 3` 就是说列起始线是第一条 column 线，列终止线是第三条 gutter 线，基本上数字 1 都是可以被省略掉的，于是可以写成 `grid-column: column / gutter 3`。之前提过 span 这个关键字，这里我们还可以写成 `grid-column: column / span gutter 3`，好吧这里并没有体现出 span 应有的风姿，下面这个改写的例子或许更能够让你接受：
+```css
+grid-column: column 2 / gutter 4;
+/*改写如下*/
+grid-column: column 2 / span gutter 3;
+```
+- 定义行列模板的时候，我们使用了 repeat 函数，这个函数接受两个参数，第一个是重复的次数，第二个是要重复的字符串。  
+
+
+### 其他有用的属性
+
+好了，经过上面的讨论，大家应该能够对这个 `grid-layout` 有初步的了解啦。下面列一下其他有用的属性。  
+
+- grid-gap 系列
+  + grid-column-gap 列之间的间隙呗
+  + grid-row-gap 行之间的间隙
+  + grid-gap 格式：行间隙 / 列间隙
+- grid-auto 系列
+  + grid-auto-columns 定义溢出的列的宽度
+  + grid-auto-rows 定义溢出的行的高度
+  + grid-auto-flow 设置元素的排列方式 row | column | row dense | column dense
+- 对齐系列
+  + justify-items 定义单元格内容的对齐方式 - 横向 start | end | center | stretch(default)
+  + align-items 定义单元格内容的对齐方式 - 纵向 start | end | center | stretch(default)
+  + justify-content 定义单元格整体的对齐方式 - 横向 start(default) | end | stretch | space-around | space-between | space-evenly
+  + align-content 定义单元格整体的对齐方式 - 纵向 start(default) | end | stretch | space-around | space-between | space-evenly
+  + justify-self / align-self 在 grid 子项中定义，可以单独调整该子项的对齐方式
+
+有兴趣的同学，自己写个 demo 尝试一下也就知道这些属性是干什么的了。这里简单用图说明一下 `space-around space-evenly space-between` 这三个值。
+
+*space-around*
+![](../Image/grid-layout/space-around.png)  
+
+*space-evenly*
+![](../Image/grid-layout/space-evenly.png)  
+
+*space-between*
+![](../Image/grid-layout/space-between.png)  
