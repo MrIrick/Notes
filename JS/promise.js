@@ -94,21 +94,21 @@ const promiseProto = {
             try {
                 then = x.then
             } catch (e) {
-                promise.reject(e)
+                return promise.reject(e)
             }
             if (utils.isFunction(then)) {
                 try {
                     then.call(x, resolvePromise, rejectPromise)
                 } catch (e) {
                     if (!done) {
-                        promise.reject(e)
+                        return promise.reject(e)
                     }
                 }
             } else {
-                promise.fulfill(x)
+                return promise.fulfill(x)
             }
         } else {
-            promise.fulfill(x)
+            return promise.fulfill(x)
         }
 
         function resolvePromise(y) {
