@@ -182,9 +182,9 @@ const elm = imported.querySelector('div.logo')
 </head>
 <body>
   <ul is="my-list">
-    <p class="item" slot="item">条目1</p>
-    <p class="item" slot="item">条目2</p>
-    <p class="item" slot="item">条目3</p>
+    <p class="item">条目1</p>
+    <p class="item">条目2</p>
+    <p class="item">条目3</p>
   </ul>
   <script>
     {
@@ -202,7 +202,6 @@ const elm = imported.querySelector('div.logo')
           const btn = root.querySelector('button')
           btn.addEventListener('click', () => {
             const p = document.createElement('p')
-            p.slot = 'item'
             p.className = 'item'
             p.textContent = `条目${++List.count}`
             this.appendChild(p)
