@@ -10,20 +10,15 @@ Web Components 是几项技术综合的结果：
 首先要定义一个类，这个类用来生成自定义的元素，所以这个类要继承 HTMLElement，如果是在已有元素的基础上扩展，则继承已有元素的构造函数（例如，在 button 的基础上进行扩展，需要继承 HTMLButtonElement）。
 
 自定义元素与一般元素的区别在于，可以设定该元素的生命周期回调。
-- connectedCallback
-- disconnectedCallback
-- attributeChangedCallback
+- constructor - 创建元素时执行
+- connectedCallback - 元素插入DOM时执行
+- disconnectedCallback - 元素被移除DOM时执行
+- attributeChangedCallback - 元素的属性被增、删、改时执行。另外，通过在类上定义静态 getter 属性 observedAttributes 可以指定哪些属性被监听，返回值可以为数组。
 - adoptedCallback 使用 `document.adoptNode(node)` 触发
-自定义元素的类中的 constructor 方法，为该元素创建时的生命周期回调。  
-注：目前 Chrome 的实现对应为如下方法名：
-- createdCallback - 注册元素时执行
-- attachedCallback - 元素插入DOM时执行
-- detachedCallback - 元素被移除DOM时执行
-- attributeChangedCallback - 元素的属性被增、删、改时执行
 
 注意，attributeChangedCallback 的回调函数的参数为：属性名称, 旧值, 新值, 命名空间。当设置值或者删除值时，相应的旧值或者新值会缺省为 null。
 
-定义好类之后，还需要注册才能使用。原因其实很简单，如果你不告诉浏览器你这个自定义元素在 HTML 中是个怎样的标签（叫什么名字，是否继承已有元素），浏览器根本不知道该怎么渲染你这个自定义元素啊。注册通过下面的方法完成，返回值是一个构造函数。
+定义好类之后，还需要注册才能使用。原因其实很简单，如果你不告诉浏览器你这个自定义元素在 HTML 中是个怎样的标签（叫什么名字，是否继承已有元素），浏览器根本不知道该怎么渲染你这个自定义元素啊。注册通过下面的方法完成。
 ```js
 // 目前 Chrome58 支持两种注册方法
 const myCustom = document.registerElement('my-custom', CustomElment, {extends: 'button'})
@@ -41,13 +36,18 @@ customElements.define('my-custom', CustomElment, {extends: 'button'})
 ```
 *方法二*
 ```js
-// myCustom 为上面代码中，customElements.define() 的返回值，是一个构造函数
-const myEle = new myCustom()
-document.body.appendChild(myEle)
-// 或者
 const myEle = document.createElement('my-custom')
 // 如果是扩展
 const myButton = document.createElement('button', 'my-button')
+```
+
+这里还有一个问题可能好多人都会问，如果这个类定义在自定义元素之前还好说，要是在类定义之前就出现了自定义的标签，浏览器会怎么处理呢。其实浏览器会把不认识的标签标记成 undefined 状态（这时可以通过 :not(:defined) 选择器来选中它），等我们定义好类并注册完后，浏览器会对我们的自定义元素进行类似于重新渲染的操作，并将其标记成 defined 状态（这是可以通过 :defined 选择器来选中它）。  
+
+另外，现在有一个方法可以侦听自定义元素的状态：
+```js
+//@param String tagName
+//@returns promise
+customeElements.whenDefined(tagName)
 ```
 
 # HTML Templates
@@ -63,7 +63,7 @@ article aside blockquote body div header footer
 h1 h2 h3 h4 h5 h6
 nav p section span  
 
-要改变 Shadow DOM 中元素的样式，可以在 Shadow DOM 中添加 style 标签。  
+要改变 Shadow DOM 中元素的样式，可以在 Shadow DOM 中添加 style 标签，这里定义的样式通常情况下只能影响 shadowRoot 里的元素。  
 还要注意的一点是，一旦一个元素挂载了 shadowRoot，它所有的子元素都将被隐藏掉。那是不是说子元素就没有任何的作用了呢，也不是。我们可以将子元素填充进 shadowRoot 中相应的占位符。
 
 创建 Shadow DOM 的语法如下：
@@ -75,12 +75,14 @@ const shadowRoot = Element.attachShadow(shadowRootInit)
 
 在 shadowRoot 中，我们可以使用一种特殊的叫做 slot 的标签，实际上相当于占位符，其由 HTMLSlotElement 定义。slot 元素包含如下属性方法。
 - name 就是标识这个占位符的一个名字而已，将要分配给这个占位符的元素可以通过将自身的 slot 属性指定为这个名字，从而指定是要分配给哪个占位符。
-- assignedNodes() 返回分配给这个占位符的元素序列，如果没有分配，返回空数组。  
+- assignedNodes(option) 返回分配给这个占位符的元素序列，如果没有分配，返回空数组。options 有一个 flatten 属性，默认为 false，设置为 true 时，会返回 slot 元素原先准备的 fallback 内容。  
 
-每个 HTML 元素现在都有如下属性。
+每个 HTML 元素现在都有如下属性方法。
 - shadowRoot 指向该元素下挂载的 shadowRoot，如果元素没有挂载 shadowRoot，则该属性为 null。
 - assignedSlot 只读，这个元素如果被分配到 shasdowRoot 中的一个占位符（即上文中提到的 slot 标签），则会返回对应的那个 slot 元素。
 - slot 元素的 slot 属性，用来指定 slot 的名称。
+- isConnected() 返回布尔值。用来表示该元素是否存在于当前 HTML 文档中。
+- getRootNode(options) 返回该元素的 root，即当前作用域的顶级文档对象，可能是 shadowRoot 或 document。当 options 的 composed 属性为 true 时，会跨越可能存在的 shadowRoot 直达当前页面最顶层，即 document。
 
 shadowRoot 类似于 documentFragment，基本上 documentFragment 上的方法 shadowRoot 都可以使用，只不过作用域被限制在 shadowRoot 内。除此之外，shadowRoot 还有以下属性。
 - mode: open | closed 当设置为 closed 时，外部无法通过元素的 shadowRoot 属性访问到其下的 shadowRoot（除非你把 shadowRoot 保存在了一个全局变量里）。
@@ -106,14 +108,23 @@ shadowRoot 类似于 documentFragment，基本上 documentFragment 上的方法 
 |:host|匹配宿主元素|NaN|
 |:host(<selector>)|匹配括号中选择器对应的宿主元素|匹配括号中选择器对应的元素|
 |:host-context(<selector>)|匹配括号中选择器对应的，宿主元素的父级元素|NaN|
-|::content/::slot|匹配通过 slot 传进来的元素|NaN|
+|::slotted()|匹配通过 slot 传进来的元素|NaN|
 |::shadow(已弃用)|NaN|匹配 shadowRoot|
-|/deep/|NaN|匹配 shadowRoot 中的后代元素|
+|/deep/(已弃用)|NaN|匹配 shadowRoot 中的后代元素|
 
 层叠规则，对于两个优先级相同的 CSS 声明，不带 !important 时，外部样式优先于内部样式，带 !important 时，内部样式优先于外部样式。这实际上是为了让外部样式能够控制内部样式，而内部样式又不至于失去控制权。  
 
 继承，shadowRoot 中顶级元素的样式从宿主元素继承而来。
 
+*Event*
+在 shadowRoot 中，你可以监控通过 slot 传递进来的 DOM 元素的变化。这个监控手段就是侦听 slot 元素分发的 slotchange 事件。
+
+*事件的作用域*
+默认情况下，事件不会冒泡到 shadowRoot 的外面，除了一些 UIEvents。对于自定义事件，可以通过指定 bubbles 和 composed 属性为 true，来完成跨越 shadowRoot 的事件冒泡。
+```js
+d.dispatchEvent(new Event('my-custom', {bubbles: true, composed: true}))
+```
+与此同时，在侦听这种跨越 shadowRoot 的冒泡事件时，event 对象上提供了一个 composedPath 方法，用来替代 event.path。
 
 # HTML Imports  
 HTML Imports 的目的是为 Web Components 提供打包机制。使用方法如下。  
