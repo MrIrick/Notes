@@ -158,16 +158,13 @@ const elm = imported.querySelector('div.logo')
       padding: 0;
       margin: 0;
     }
-    ul /deep/ p {
-      background: darkred;
-    }
-
   </style>
   <template id="list">
     <style>
       ::content p {
         color: #fff;
         padding: 5px 8px;
+        background: darkred;
       }
       :host(ul[is="my-list"]) {
         background: silver;
@@ -193,9 +190,9 @@ const elm = imported.querySelector('div.logo')
 </head>
 <body>
   <ul is="my-list">
-    <p class="item">条目1</p>
-    <p class="item">条目2</p>
-    <p class="item">条目3</p>
+    <p class="item" slot="item">条目1</p>
+    <p class="item" slot="item">条目2</p>
+    <p class="item" slot="item">条目3</p>
   </ul>
   <script>
     {
@@ -213,6 +210,7 @@ const elm = imported.querySelector('div.logo')
           const btn = root.querySelector('button')
           btn.addEventListener('click', () => {
             const p = document.createElement('p')
+            p.slot = 'item'
             p.className = 'item'
             p.textContent = `条目${++List.count}`
             this.appendChild(p)
