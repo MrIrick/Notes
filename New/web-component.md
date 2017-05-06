@@ -228,4 +228,6 @@ const elm = imported.querySelector('div.logo')
 </html>
 ```
 
+最后再提一点，所有的自定义元素，默认是 inline 水平的。为什么是这样呢，其实包括所有的原生标签本来都是 inline 水平的，只是浏览器给某些元素设置了新的默认样式，比如 div，ul 等浏览器会默认给它们的 display 设置成 block。
+
 参考文章：http://www.tuicool.com/articles/iiue6zb  
