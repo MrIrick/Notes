@@ -108,7 +108,7 @@ shadowRoot 类似于 documentFragment，基本上 documentFragment 上的方法 
 |:host|匹配宿主元素|NaN|
 |:host(<selector>)|匹配括号中选择器对应的宿主元素|匹配括号中选择器对应的元素|
 |:host-context(<selector>)|匹配括号中选择器对应的，宿主元素的父级元素|NaN|
-|::slotted()|匹配通过 slot 传进来的元素|NaN|
+|::slotted(<selector>)|匹配通过 slot 传进来的元素|NaN|
 |::shadow(已弃用)|NaN|匹配 shadowRoot|
 |/deep/(已弃用)|NaN|匹配 shadowRoot 中的后代元素|
 
