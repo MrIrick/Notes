@@ -14,10 +14,10 @@ function unbindEvent(el, selector, eventType, callback) {
   const {e, ns} = parse(eventType)
   const set = handlers.get(el) || new Set()
   if (!set.size) return
-  s.forEach((o) => {
+  set.forEach((o) => {
     if ((!e || e === o.e) && (!ns || ns === o.ns) && (!selector || selecotr === o.selector) && (!callback || callback === o.callback)) {
       el.removeEventListener(e, o.delegator || callback)
-      s.delete(o)
+      set.delete(o)
     }
   })
 }
