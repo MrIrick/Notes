@@ -1,3 +1,4 @@
+// 节流
 const throttle = function(func, wait, options) {
     let ctx, args, result;
     let timeout = null;

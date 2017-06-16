@@ -33,7 +33,8 @@ http://caniuse.com/#search=web%20animations%20api
 对大多数 Web 开发者来说，CSS 动画是我们很熟悉的东西，因此学习 WAAPI 最好的方式莫过于从 CSS 动画开始。CSS 动画有着与 WAAPI 相似的语法，因此很适合作为我们讲解的开始。  
 
 ### CSS 版本
-这是一个翻跟头（wut?）的动画，用 CSS 编写的，表现了爱丽丝坠入兔子洞从而进入仙境的场景（要看完整的代码请点击[codepen](http://codepen.io/rachelnabors/pen/QyOqqW)）：
+这是一个翻跟头（wut?）的动画，用 CSS 编写的，表现了爱丽丝坠入兔子洞从而进入仙境的场景（要看完整的代码请点击[codepen](http://codepen.io/rachelnabors/pen/QyOqqW)）：  
+
 ![爱丽丝梦游仙境](https://mdn.mozillademos.org/files/13843/tumbling-alice_optimized.gif)
 
 我们观察到背景的移动，爱丽丝的旋转以及她身体颜色随着旋转产生的变化。我们这里只关注爱丽丝自身的动画。这是一份简单的 CSS 实现：
@@ -228,7 +229,7 @@ document.getAnimations().forEach(
 ```js
 duration: aliceChange.effect.timing.duration / 2
 ```
-为了理解这样做的原因，让我们看看爱丽丝动画的代码：
+为了理解这样写的原因，让我们看看爱丽丝动画的代码：
 ```js
 var aliceChange = document.getElementById('alice').animate(
   [
@@ -240,5 +241,34 @@ var aliceChange = document.getElementById('alice').animate(
     fill: 'both'
   });
 ```
+爱丽丝的动画是从原来身体大小的一半变成原来身体大小的两倍。我们先在动画开始的地方暂停：  
+```js
+aliceChange.pause();
+```
 
-TODO...
+现在她只有原来身体一半的大小，看起来就像已经喝下了整瓶的药水。我们想要的是，一开始她是正常的大小，这就需要动画过程已经进行到50%的位置。我们可以通过设置 `Animation.currentTime` 为 4 来解决这个问题：  
+```js
+aliceChange.currentTime = 4000;
+```
+
+如果我们通过修改 `Animation.currentTime` 来操作整个动画，我们就需要多次修改这个值。如果能自动地设置这个值就好了，这样我们就不需要每次手动更新了。实际上我们可以通过引用 `Animation.effect` 属性来完成这件事，它返回一个包含当前动画所有细节的对象：
+```js
+aliceChange.currentTime = aliceChange.effect.timing.duration / 2;
+```
+
+通过 `effect` 属性，我们可以获取动画的关键帧对象和时序对象。`aliceChange.effect.timing` 指向爱丽丝动画的时序对象（`AnimationEffectTimingReadOnly` 的实例）—— 这个时序对象中包含了 `duration` 属性。我们可以将这个 `duration` 属性除以 2 之后赋值给 `aliceChange.currentTime`，使爱丽丝一开始是正常大小。  
+
+我们也可以用同样的方式设置蛋糕和药水动画的 `duration` 属性：  
+```js
+var drinking = document.getElementById('liquid').animate(
+[
+  { height: '100%' },
+  { height: '0' }   
+], {
+  fill: 'forwards',
+  duration: aliceChange.effect.timing.duration / 2
+});
+drinking.pause();
+```
+
+现在三个动画都链接到同一个 `duration`，我们只需要修改一处就可以了。  

@@ -212,7 +212,7 @@ const elm = imported.querySelector('div.logo')
             const p = document.createElement('p')
             p.slot = 'item'
             p.className = 'item'
-            p.textContent = `条目${++List.count}`
+            p.textContent = `+ 条目${++List.count}`
             this.appendChild(p)
           })
         }
