@@ -37,7 +37,7 @@ http://caniuse.com/#search=web%20animations%20api
 
 ![爱丽丝梦游仙境](https://mdn.mozillademos.org/files/13843/tumbling-alice_optimized.gif)
 
-我们观察到背景的移动，爱丽丝的旋转以及她身体颜色随着旋转产生的变化。我们这里只关注爱丽丝自身的动画。这是一份简单的 CSS 实现：
+我们观察到背景的移动，爱丽丝的旋转以及她身体颜色随着旋转产生的变化。我们这里只关注爱丽丝自身旋转的动画。这是一份简单的 CSS 实现：
 
 ```css
 #alice {
@@ -110,7 +110,7 @@ document.getElementById("alice").animate(
 
 `animate()` 方法可以在任何的 DOM 元素上调用，CSS 能完成的 WAAPI 都可以完成。  
 
-还有，如果我们只想指定 `duration` 属性，可以这样写：
+还有，如果我们只想指定 `duration` 属性，可以直接传一个数字值：
 ```js
 document.getElementById("alice").animate(
   [
@@ -128,7 +128,7 @@ document.getElementById("alice").animate(
 在这个游戏中，我们通过瓶子里的药水使爱丽丝变小，通过蛋糕使爱丽丝变大。  
 
 ### 暂停和播放动画
-我们过会儿在讨论爱丽丝的动画，现在我们先来看蛋糕的动画：
+我们过会儿再讨论爱丽丝的动画，现在我们先来看蛋糕的动画：
 ```js
 var nommingCake = document.getElementById('eat-me_sprite').animate(
 [
@@ -145,7 +145,7 @@ var nommingCake = document.getElementById('eat-me_sprite').animate(
 nommingCake.pause();
 ```
 
-我们可以用 `Animation.play()` 方法在适当的时机播放动画：
+之后我们可以用 `Animation.play()` 方法在适当的时机播放动画：
 ```js
 nommingCake.play();
 ```
@@ -167,13 +167,15 @@ cake.addEventListener("mousedown", growAlice, false);
 cake.addEventListener("touchstart", growAlice, false);
 ```
 
+PS：当然，你得在用户抬起鼠标或手指时，暂停播放动画，不然...
+
 ### 其他有用的方法
 除了暂停和播放，我们还可以用一下的方法：
 - `Animation.finish()` 跳过动画过程，直接跳到动画的结束位置。
 - `Animation.cancel()` 取消动画过程，直接跳到动画的开始位置。
 - `Animation.reverse()` 设置动画的 `playbackRate` 属性为负值，即回放动画。
 
-让我们先看一下 `playbackRate` 这个属性，一个负的 `playbackRate` 属性会导致动画以相反的方向播放。当爱丽丝喝了药水，她就变小了。这是因为触发药水将 `playbackRate` 从 1 变成 -1：
+让我们先看一下 `playbackRate` 这个属性，一个负的 `playbackRate` 属性会导致动画以相反的方向播放。当爱丽丝喝了药水，她就变小了。这是因为喝下药水的函数将 `playbackRate` 从 1 变成 -1：
 ```js
 var shrinkAlice = function() {
   aliceChange.playbackRate = -1;
@@ -214,7 +216,7 @@ document.addEventListener("touchstart", goFaster);
 当你点击的时候，背景中的物体也会受到影响。当你让爱丽丝和红皇后的速度快一些时会发生什么呢？慢一些时呢？  
 
 # 获取动画的信息
-想想我们还可以如何使用 `playbackRate`，比如通过允许放慢整个网站的动画速率来提高前庭功能障碍患者的可访问性。通过 CSS 来完成这项功能是不可能的，除非重新计算每个 CSS 动画规则中的 `duration` 属性。而通过 WAAPI，我们可以用即将到来的 `document.getAnimations()` 方法遍历页面中的每个动画并调整它们的 `playbackRate` 属性：
+想想我们还可以如何利用 `playbackRate` 属性。比如通过允许放慢整个网站的动画速率来提高前庭功能障碍患者的可访问性。通过 CSS 来完成这项功能是不可能的，除非重新计算每个 CSS 动画规则中的 `duration` 属性。而通过 WAAPI，我们可以用即将到来的 `document.getAnimations()` 方法遍历页面中的每个动画并调整它们的 `playbackRate` 属性：
 ```js
 document.getAnimations().forEach(
   function (animation) {
@@ -222,8 +224,7 @@ document.getAnimations().forEach(
   }
 );
 ```
-
-使用 WAAPI，你需要做的全部就是改变一个数值。  
+瞧，使用 WAAPI 的话，你需要做的全部就是改变一个数值而已。  
 
 另一个 CSS 动画难以独自完成的事情是，创建依赖于另一个动画的动画。举个例子，在爱丽丝变大变小的代码中，你可能注意到了这个奇怪的 `duration` 属性：
 ```js
@@ -246,12 +247,12 @@ var aliceChange = document.getElementById('alice').animate(
 aliceChange.pause();
 ```
 
-现在她只有原来身体一半的大小，看起来就像已经喝下了整瓶的药水。我们想要的是，一开始她是正常的大小，这就需要动画过程已经进行到50%的位置。我们可以通过设置 `Animation.currentTime` 为 4 来解决这个问题：  
+现在她只有原来身体一半的大小，看起来就像已经喝下了整瓶的药水。我们想要的是，一开始身体处在正常的大小，这就需要动画过程已经进行到50%的位置。我们可以通过设置 `Animation.currentTime` 为 4000 来解决这个问题：  
 ```js
 aliceChange.currentTime = 4000;
 ```
 
-如果我们通过修改 `Animation.currentTime` 来操作整个动画，我们就需要多次修改这个值。如果能自动地设置这个值就好了，这样我们就不需要每次手动更新了。实际上我们可以通过引用 `Animation.effect` 属性来完成这件事，它返回一个包含当前动画所有细节的对象：
+在制作整个动画的过程中，我们可能需要多次修改这个值以达到最好的效果。如果能自动地设置这个值就好了，这样我们就不需要每次手动编辑了。实际上我们可以通过引用 `Animation.effect` 属性来完成这件事，它返回一个包含当前动画所有细节的对象：
 ```js
 aliceChange.currentTime = aliceChange.effect.timing.duration / 2;
 ```
@@ -271,4 +272,54 @@ var drinking = document.getElementById('liquid').animate(
 drinking.pause();
 ```
 
-现在三个动画都链接到同一个 `duration`，我们只需要修改一处就可以了。  
+现在三个动画都链接到同一个 `duration`，我们每次只需要修改一处就可以了。  
+
+我们还可以用 WAAPI 计算出动画的当前进度。当爱丽丝把蛋糕吃完或者把药水喝完，游戏就结束了。玩家看到的画面应该取决于爱丽丝动画的进度，不管是她变得太大而不能通过小门还是变得太小而不能拿到桌子上的钥匙。我们可以通过用 `aliceChange.effect.activeDuration` 切分 `Animation.currentTime` 从而计算出她处于什么状态，是最大、最小还是中间。  
+```js
+var endGame = function() {
+
+  // get Alice's timeline's playhead location
+  var alicePlayhead = aliceChange.currentTime;
+  var aliceTimeline = aliceChange.effect.activeDuration;
+
+  // stops Alice's and other animations
+  stopPlayingAlice();
+
+  // depending on which third it falls into
+  var aliceHeight = alicePlayhead/aliceTimeline;
+
+  if (aliceHeight <= .333){
+    // Alice got smaller!
+    ...
+
+  } else if (aliceHeight >= .666) {
+    // Alice got bigger!
+    ...
+
+  } else {
+    // Alice didn't change significantly    
+    ...
+
+  }
+}
+```
+
+# Callbacks and promises
+CSS 动画和 CSS 过渡都有它们自己的事件监听，同样地，WAAPI 也有：
+- `onfinish` 用于注册完成事件，并且可以通过 `finish()` 方法手动触发
+- `oncancel` 用于注册取消事件，并且可以通过 `cancel()` 方法手动触发
+
+这里我们为蛋糕、药水和爱丽丝注册完成事件，事件处理器指定为 `endGame` 函数：  
+
+```js
+// When the cake or runs out...
+nommingCake.onfinish = endGame;
+drinking.onfinish = endGame;
+
+// ...or Alice reaches the end of her animation
+aliceChange.onfinish = endGame;
+```
+未来会针对这两个事件增加对 promise 的支持。
+
+# 结论
+以上介绍的是 WAAPI 的基本特性，大多数都已经被现代浏览器所支持。现在你应该已经准备好了在浏览器中进行一番探索，创造出你自己的动画！
