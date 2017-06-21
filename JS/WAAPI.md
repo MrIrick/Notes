@@ -1,22 +1,3 @@
-WAAPI 为开发者提供了更加便利和强大的动画生成机制，并且因为性能和标准的原因，一定会取代当前已有的一些动画库。正如某人曾说过的，能用 JS 写的东西，将来一定会用 JS 重写。
-
-以下是常用的API
-
-### Element.animate(frames, timing)
-frames 是一些动画帧的定义  
-timing 是一些时间控制选项  
-@returns player 动画控制器实例
-### player
-- player.playState 1.idle 2.running 3.paused 4.finished 5.pending
-- player.playbackRate
-- player.startTime
-- player.currentTime
-- player.onfinish
-- player.play()
-- player.pause()
-- player.reverse()
-- player.cancel()
-- player.finish()
 
 WAAPI 让我们能够构建动画并控制动画的播放。
 
