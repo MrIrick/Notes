@@ -7,16 +7,79 @@ Web Components 是几项技术综合的结果：
 下面将分别介绍这几项技术，同时在最后给出一个例子。
 
 # Custom Elements
-首先要定义一个类，这个类用来生成自定义的元素，所以这个类要继承 HTMLElement，如果是在已有元素的基础上扩展，则继承已有元素的构造函数（例如，在 button 的基础上进行扩展，需要继承 HTMLButtonElement）。
+首先要定义一个类，这个类用来生成自定义的元素，所以这个类要继承 HTMLElement。如果是在已有元素的基础上扩展，则继承已有元素的构造函数（例如，在 button 的基础上进行扩展，需要继承 HTMLButtonElement）。 
+
+使用类来定义自定义元素的好处在于，this 指向的就是 DOM 元素，因而通过 this 可以完成很多事，比如 this.children 获取子元素，查询后代元素 this.querySelector() 等等，只要是 DOM API，基本上都能使用。
+
+创建自定义元素的规则：
+1. 自定义元素的名字必须包含 `-`，这样做的原因是，浏览器可以轻松区分出自定义元素和普通的元素。
+2. 相同的名字只能注册一次。
+3. 自定义元素不能是自闭合标签，像 `<img>` 这种。
+
+扩展内置元素的好处是，我们可以避免自己去实现一遍内置元素的行为，比如 disabled、click()、keydown、tabindex 等。很遗憾的是，目前还没有浏览器支持扩展原生元素：
+```js
+class FancyButton extends HTMLButtonElement {
+  constructor () {
+    super()
+    this.addEventListener('click', e => this.drawRipple(e.offsetX, e.offsetY))
+  }
+
+  drawRipple(x, y) {
+    let div = document.createElement('div')
+    div.classList.add('ripple')
+    this.appendChild(div)
+    div.style.top = `${y - div.clientHeight / 2}px`
+    div.style.left = `${x - div.clientWidth / 2}px`
+    div.style.backgroundColor = 'currentColor'
+    div.classList.add('run')
+    div.addEventListener('transitionend', e => div.remove())
+  }
+}
+
+customElements.define('fancy-button', FancyButton, {extends: 'button'})
+```
 
 自定义元素与一般元素的区别在于，可以设定该元素的生命周期回调。
-- constructor - 创建元素时执行
-- connectedCallback - 元素插入DOM时执行
-- disconnectedCallback - 元素被移除DOM时执行
-- attributeChangedCallback - 元素的属性被增、删、改时执行。另外，通过在类上定义静态 getter 属性 observedAttributes 可以指定哪些属性被监听，返回值可以为数组。
-- adoptedCallback 使用 `document.adoptNode(node)` 触发
+- constructor() - 创建或更新（即下文提到的 element upgrades）元素时执行
+- connectedCallback() - 元素插入 DOM 时执行
+- disconnectedCallback() - 元素被移除 DOM 时执行
+- attributeChangedCallback(attrName, oldVal, newVal) - 元素的属性被增、删、改时执行。另外，通过在类上定义静态 getter 属性 observedAttributes 可以指定哪些属性被监听，返回值可以为数组。
+- adoptedCallback 当节点从一个文档移动到另一个文档中时执行。例如，使用 `document.adoptNode(node)` 触发
 
-注意，attributeChangedCallback 的回调函数的参数为：属性名称, 旧值, 新值, 命名空间。当设置值或者删除值时，相应的旧值或者新值会缺省为 null。
+要注意一些地方：
+- attributeChangedCallback 的回调函数的参数为：属性名称, 旧值, 新值, 命名空间。当设置值或者删除值时，相应的旧值或者新值会缺省为 null。
+- 这些生命周期回调是同步触发的，比如，当你 `el.setAttribute()` 之后，attributeChangedCalback 会马上执行。
+- 只在必要的时候定义相应的生命周期回调。如果你的自定义元素很复杂甚至需要在 connectedCallback 中连接 IndexDB，请一定要在 disconnectedCallback 中清理连接。而且你不能在所有的情景下都依赖元素从 DOM 移除来触发 disconnectedCallback，比如，用户关闭 tab 的时候，就不会触发 disconnectedCallback 回调。
+
+可能 adoptedCallback 还是很不清晰，这里再看一个例子：
+```js
+function createWindow(srcdoc) {
+  let p = new Promise(resolve => {
+    let f = document.createElement('iframe');
+    f.srcdoc = srcdoc || '';
+    f.onload = e => {
+      resolve(f.contentWindow);
+    };
+    document.body.appendChild(f);
+  });
+  return p;
+}
+
+// 1. Create two iframes, w1 and w2.
+Promise.all([createWindow(), createWindow()])
+  .then(([w1, w2]) => {
+    // 2. Define a custom element in w1.
+    w1.customElements.define('x-adopt', class extends w1.HTMLElement {
+      adoptedCallback() {
+        console.log('Adopted!');
+      }
+    });
+    let a = w1.document.createElement('x-adopt');
+
+    // 3. Adopts the custom element into w2 and invokes its adoptedCallback().
+    w2.document.body.appendChild(a);
+  });
+```
 
 定义好类之后，还需要注册才能使用。原因其实很简单，如果你不告诉浏览器你这个自定义元素在 HTML 中是个怎样的标签（叫什么名字，是否继承已有元素），浏览器根本不知道该怎么渲染你这个自定义元素啊。注册通过下面的方法完成。
 ```js
@@ -38,10 +101,109 @@ customElements.define('my-custom', CustomElment, {extends: 'button'})
 ```js
 const myEle = document.createElement('my-custom')
 // 如果是扩展
-const myButton = document.createElement('button', 'my-button')
+const myButton = document.createElement('button', {is: 'my-button'})
+// or
+const myButton = new FancyButton()
 ```
 
-这里还有一个问题可能好多人都会问，如果这个类定义在自定义元素之前还好说，要是在类定义之前就出现了自定义的标签，浏览器会怎么处理呢。其实浏览器会把不认识的标签标记成 undefined 状态（这时可以通过 :not(:defined) 选择器来选中它），等我们定义好类并注册完后，浏览器会对我们的自定义元素进行类似于重新渲染的操作，并将其标记成 defined 状态（这时可以通过 :defined 选择器来选中它）。  
+再看一个扩展 Image 的例子：
+```js
+customElements.define('bigger-img', class extends Image {
+  // Give img default size if users don't specify.
+  constructor(width=50, height=50) {
+    super(width * 10, height * 10);
+  }
+}, {extends: 'img'});
+```
+
+```html
+<img is="bigger-img" width="15" height="20">
+```
+
+```js
+const BiggerImage = customElements.get('bigger-img'); // 此方法可获取标签名对应的类，主要用于上述匿名类的情况
+const image = new BiggerImage(15, 20); // pass ctor values like so.
+console.assert(image.width === 150);
+console.assert(image.height === 200);
+```
+
+### reflects HTML properties as HTML attributes （译为：将 HTML 特性反映到 HTML 属性中，用 `.` 访问的是特性，用 getAttribute 方法访问的是属性。）  
+
+几乎所有内置的 HTML 特性都会自动反映到属性上去，比如 `id`, `disabled` 等。为什么呢？因为属性在很多情况下是很有用的，比如 CSS 属性选择器就依赖于属性。
+
+当你想要保持元素的 DOM 表示跟它的 JS 状态同步的情况下，这种映射是非常有用的。一种情况是，用户为元素的某种状态定义了样式，而这样式是依赖于 HTML 属性的，当 JS 改变了元素的 HTML 特性，我们希望 HTML 属性也跟着改变，这样，用户定义的样式就能够顺利应用到元素上了：
+```css
+app-drawer[disabled] {
+  opacity: 0.5;
+  pointer-events: none;
+}
+```
+```js
+...
+
+get disabled() {
+  return this.hasAttribute('disabled');
+}
+
+set disabled(val) {
+  // Reflect the value of `disabled` as an attribute.
+  if (val) {
+    this.setAttribute('disabled', '');
+  } else {
+    this.removeAttribute('disabled');
+  }
+  this.toggleDrawer();
+}
+```
+
+### Observing changes to attributes
+HTML 属性是用户声明元素初始状态的得力帮手：
+```html
+<app-drawer open disabled></app-drawer>
+```
+
+将 HTML 特性映射到 HTML 属性后，紧接着我们还可以监听 HTML 属性的变化来做一些工作。
+
+看这个例子：
+```js
+class AppDrawer extends HTMLElement {
+  ...
+
+  static get observedAttributes() {
+    return ['disabled', 'open'];
+  }
+
+  get disabled() {
+    return this.hasAttribute('disabled');
+  }
+
+  set disabled(val) {
+    if (val) {
+      this.setAttribute('disabled', '');
+    } else {
+      this.removeAttribute('disabled');
+    }
+  }
+
+  // Only called for the disabled and open attributes due to observedAttributes
+  attributeChangedCallback(name, oldValue, newValue) {
+    // When the drawer is disabled, update keyboard/screen reader behavior.
+    if (this.disabled) {
+      this.setAttribute('tabindex', '-1');
+      this.setAttribute('aria-disabled', 'true');
+    } else {
+      this.setAttribute('tabindex', '0');
+      this.setAttribute('aria-disabled', 'false');
+    }
+    // TODO: also react to the open attribute changing.
+  }
+}
+```
+既然 HTML 特性能映射到 HTML 属性，HTML 属性就应该能映射到 HTML 特性，这个可以通过 attributeChangedCallback 来实现。
+
+### 渐进增强的 HTML
+
+这里还有一个问题可能好多人都会问，如果这个类定义在自定义元素之前还好说，要是在类定义之前就出现了自定义的标签，浏览器会怎么处理呢。其实浏览器会把不认识的标签标记成 undefined 状态（这时可以通过 :not(:defined) 选择器来选中它），等我们定义好类并注册完后，浏览器会对我们的自定义元素进行类似于重新渲染的操作，并将其标记成 defined 状态（这时可以通过 :defined 选择器来选中它）。因而我们能够通过 `:not(:defined)` 规定元素尚未定义时的样式，并通过 `:defined` 更换样式，甚至可以有一个 `opacity` 的过渡动画。
 
 另外，现在有一个方法可以侦听自定义元素的状态：
 ```js
@@ -49,6 +211,34 @@ const myButton = document.createElement('button', 'my-button')
 //@returns promise
 customeElements.whenDefined(tagName)
 ```
+
+事实上，从 undefined 到 defined 的这一状态变化过程叫做 `element upgrades`。下面是一个例子：
+```html
+<share-buttons>
+  <social-button type="twitter"><a href="...">Twitter</a></social-button>
+  <social-button type="fb"><a href="...">Facebook</a></social-button>
+  <social-button type="plus"><a href="...">G+</a></social-button>
+</share-buttons>
+```
+```js
+// Fetch all the children of <share-buttons> that are not defined yet.
+let undefinedButtons = buttons.querySelectorAll(':not(:defined)');
+
+let promises = [...undefinedButtons].map(socialButton => {
+  return customElements.whenDefined(socialButton.localName);
+));
+
+// Wait for all the social-buttons to be upgraded.
+Promise.all(promises).then(() => {
+  // All social-button children are ready.
+});
+```
+我们应该可以猜到，内置的 HTML 元素始终都是 defined 的。
+
+### 总结一下 customElements 下的方法
+- define(tagName, ctor, options)
+- get(tagName) 如果该元素尚未定义，返回值为 undefined
+- whenDefined(tagName) 如果 tagName 不合法，就 reject
 
 # HTML Templates
 `<template>` 元素并不会被渲染，但依然会被浏览器解析。
