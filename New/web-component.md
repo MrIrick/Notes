@@ -41,7 +41,7 @@ const myEle = document.createElement('my-custom')
 const myButton = document.createElement('button', 'my-button')
 ```
 
-这里还有一个问题可能好多人都会问，如果这个类定义在自定义元素之前还好说，要是在类定义之前就出现了自定义的标签，浏览器会怎么处理呢。其实浏览器会把不认识的标签标记成 undefined 状态（这时可以通过 :not(:defined) 选择器来选中它），等我们定义好类并注册完后，浏览器会对我们的自定义元素进行类似于重新渲染的操作，并将其标记成 defined 状态（这是可以通过 :defined 选择器来选中它）。  
+这里还有一个问题可能好多人都会问，如果这个类定义在自定义元素之前还好说，要是在类定义之前就出现了自定义的标签，浏览器会怎么处理呢。其实浏览器会把不认识的标签标记成 undefined 状态（这时可以通过 :not(:defined) 选择器来选中它），等我们定义好类并注册完后，浏览器会对我们的自定义元素进行类似于重新渲染的操作，并将其标记成 defined 状态（这时可以通过 :defined 选择器来选中它）。  
 
 另外，现在有一个方法可以侦听自定义元素的状态：
 ```js
@@ -52,7 +52,7 @@ customeElements.whenDefined(tagName)
 
 # HTML Templates
 `<template>` 元素并不会被渲染，但依然会被浏览器解析。
-template 元素的 content 属性是一个 documentFragment，这意味着我们可以操纵 template 包含的 DOM 结构，然后使用 `document.importNode()` 或者 `.clone` 方法将全部或部分 DOM 插入文档中进行渲染。
+template 元素的 content 属性是一个 documentFragment，这意味着我们可以操纵 template 包含的 DOM 结构，然后使用 `document.importNode()` 或者 `.cloneNode()` 方法将全部或部分 DOM 插入文档中进行渲染。
 
 # Shadow DOM
 Shadow DOM 的出现是为了完成代码作用域的隔离，尤其是 CSS 的隔离。我们知道 CSS 样式是层叠的，也就是说当前页面里的每一个元素都可能会受到样式表中每一条规则的影响，有时候我们想避免这种影响，尤其是我们想写一个独立的组件时。我们希望使用组件的用户引入这个组件的时候，组件不会受已有样式的影响。想想这个隔离还是很有必要的。另外，JS 也是会被隔离的，比如当我们使用 document.querySelector 去搜索具备某些特征的元素时，shadowRoot 中的元素并不会被搜索，这样可以避免 DOM 的误操作。
@@ -61,7 +61,11 @@ Shadow DOM 必须附加在一个元素上。这个元素可以是 HTML 中的某
 自定义元素
 article aside blockquote body div header footer
 h1 h2 h3 h4 h5 h6
-nav p section span  
+nav p section span
+
+如果一个元素不在这个列表中，原因可能有二：
+1. 浏览器已经为该元素创建了 shadowRoot(&lt;textarea&gt;, &lt;input&gt;)
+2. 为该元素创建 shadowRoot 没有意义(&lt;img&gt;)
 
 要改变 Shadow DOM 中元素的样式，可以在 Shadow DOM 中添加 style 标签，这里定义的样式通常情况下只能影响 shadowRoot 里的元素。  
 还要注意的一点是，一旦一个元素挂载了 shadowRoot，它所有的子元素都将被隐藏掉。那是不是说子元素就没有任何的作用了呢，也不是。我们可以将子元素填充进 shadowRoot 中相应的占位符。
@@ -69,9 +73,21 @@ nav p section span
 创建 Shadow DOM 的语法如下：
 ```js
 //@returns [object ShadowRoot]shadowRoot
-//shadowRootInit: {mode: 'open' | 'closed'} open 代表开放的封装模式 closed 代表关闭的封装模式
+//shadowRootInit: {mode: 'open' | 'closed', delegatesFocus: true | false}
 const shadowRoot = Element.attachShadow(shadowRootInit)
 ```  
+
+这里详细说一下这两个选项：  
+1. mode: open 代表开放的封装模式 closed 代表关闭的封装模式
+当 mode 为 closed 模式的时候，会产生以下效果：
+- Element.shadowRoot 获取不到 shadowRoot，值为 null
+- Element.assignedSlot / TextNode.assignedSlot 返回值为 null
+- 对于绑定在 shadowDOM 中元素上的事件，Event.composedPath() 返回值为 []
+简言之就是限制外部对 shadowDOM 的访问，但其实并没什么卵用，所以一般我们都不会使用 closed 模式。
+ 
+delegatesFocus 为 true 的时候，有如下效果：
+- 如果你 click 了一个 shadowDOM 中的元素，而这个元素不是 focusable 的，那么 shadowDOM 中第一个 focusable 的元素会 focus
+- 当 shadowDOM 中的元素 focus 了，则宿主元素也将 focus （可通过 :focus 选择器匹配）
 
 在 shadowRoot 中，我们可以使用一种特殊的叫做 slot 的标签，实际上相当于占位符，其由 HTMLSlotElement 定义。slot 元素包含如下属性方法。
 - name 就是标识这个占位符的一个名字而已，将要分配给这个占位符的元素可以通过将自身的 slot 属性指定为这个名字，从而指定是要分配给哪个占位符。
@@ -86,7 +102,7 @@ const shadowRoot = Element.attachShadow(shadowRootInit)
 
 shadowRoot 类似于 documentFragment，基本上 documentFragment 上的方法 shadowRoot 都可以使用，只不过作用域被限制在 shadowRoot 内。除此之外，shadowRoot 还有以下属性。
 - mode: open | closed 当设置为 closed 时，外部无法通过元素的 shadowRoot 属性访问到其下的 shadowRoot（除非你把 shadowRoot 保存在了一个全局变量里）。
-- host shadowRoot 所依附的元素
+- host shadowRoot 所依附的宿主元素
 - innerHTML shadowRoot 的 HTML 内容
 
 另外还有一些 document 和 shadowRoot 共有的属性和方法，由 DocumentOrShadowRoot 这个构造函数定义，由于是共有的，因此其与 document 中对应方法的表现大体一致。
@@ -96,6 +112,11 @@ shadowRoot 类似于 documentFragment，基本上 documentFragment 上的方法 
 - elementFromPoint()
 - elementsFromPoint()
 - caretPositionFromPoint()
+
+Tip: 当 shadowDOM 中有表单元素时，document.activeElement 会先定位到宿主元素，也就是说，想从外边引用当前获取焦点的元素，可以这么写：
+```js
+document.activeElement.shadowRoot.activeElement
+```
 
 *CSS*
 虽说是为了隔离代码作用域而生的，但是总有些时候我们需要一些手段来对 shadowRoot 里的东西施加一定的影响。
@@ -107,24 +128,56 @@ shadowRoot 类似于 documentFragment，基本上 documentFragment 上的方法 
 |:----------:| ------------ | ------------ |
 |:host|匹配宿主元素|NaN|
 |:host(<selector>)|匹配括号中选择器对应的宿主元素|匹配括号中选择器对应的元素|
-|:host-context(<selector>)|匹配括号中选择器对应的，宿主元素的父级元素|NaN|
-|::slotted(<selector>)|匹配通过 slot 传进来的元素|NaN|
-|::shadow(已弃用)|NaN|匹配 shadowRoot|
-|/deep/(已弃用)|NaN|匹配 shadowRoot 中的后代元素|
+|:host-context(<selector>)|如果宿主元素的祖先元素匹配括号中选择器，则整个选择器匹配宿主元素|NaN|
+|::slotted(<selector>)|匹配通过 slot 传进来的元素（只匹配顶级子元素，即子元素的子元素不会被匹配）|NaN|
 
 层叠规则，对于两个优先级相同的 CSS 声明，不带 !important 时，外部样式优先于内部样式，带 !important 时，内部样式优先于外部样式。这实际上是为了让外部样式能够控制内部样式，而内部样式又不至于失去控制权。  
 
-继承，shadowRoot 中顶级元素的样式从宿主元素继承而来。
+继承，shadowRoot 中顶级元素的样式从宿主元素继承而来。  
+
+我们还可以通过 CSS 自定义属性为组件的使用者提供一些样式钩子：
+```html
+<!-- main page -->
+<style>
+  fancy-tabs {
+    margin-bottom: 32px;
+    --fancy-tabs-bg: black;
+  }
+</style>
+<fancy-tabs background>...</fancy-tabs>
+
+<!-- component -->
+:host([background]) {
+  background: var(--fancy-tabs-bg, #9E9E9E);
+  border-radius: 10px;
+  padding: 10px;
+}
+```
 
 *Event*
-在 shadowRoot 中，你可以监控通过 slot 传递进来的 DOM 元素的变化。这个监控手段就是侦听 slot 元素分发的 slotchange 事件。
+在 shadowRoot 中，你可以监控通过 slot 传递进来的 DOM 元素的变化。这个监控手段就是侦听 slot 元素分发的 slotchange 事件。不过这个事件貌似只侦听元素的 add/remove，要想实现监听其他跟复杂类型的变化，可以使用 MutationObserver。
 
 *事件的作用域*
-默认情况下，事件不会冒泡到 shadowRoot 的外面，除了一些 UIEvents。对于自定义事件，可以通过指定 bubbles 和 composed 属性为 true，来完成跨越 shadowRoot 的事件冒泡。
+一般而言，事件从 shadowDOM 中冒泡的时候，浏览器会进行处理，让事件看起来好像是从宿主元素发出的，这主要是为了保持 shadowDOM 良好的封装性。一些事件甚至都不会冒泡到 shadowDOM 外面。
+
+会冒泡到外面的事件有：
+Focus Events: blur, focus, focusin, focusout
+Mouse Events: click, dblclick, mousedown, mouseenter, mousemove, etc.
+Wheel Events: wheel
+Input Events: beforeinput, input
+Keyboard Events: keydown, keyup
+Composition Events: compositionstart, compositionupdate, compositionend
+DragEvent: dragstart, drag, dragend, drop, etc.
+
+对于自定义事件，可以通过指定 bubbles 和 composed 属性为 true，来完成跨越 shadowRoot 的事件冒泡。
 ```js
 d.dispatchEvent(new Event('my-custom', {bubbles: true, composed: true}))
 ```
-与此同时，在侦听这种跨越 shadowRoot 的冒泡事件时，event 对象上提供了一个 composedPath 方法，用来替代 event.path。
+与此同时，在侦听这种跨越 shadowRoot 的冒泡事件时，event 对象上提供了一个 composedPath 方法，用来替代 event.path 属性。
+
+*Tips & Tricks*
+- use css containment `:host {display: block;contain: content;}`
+- reset inheritable styles `:host {all: initial;}`
 
 # HTML Imports  
 HTML Imports 的目的是为 Web Components 提供打包机制。使用方法如下。  
