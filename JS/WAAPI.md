@@ -1,29 +1,10 @@
-WAAPI 为开发者提供了更加便利和强大的动画生成机制，并且因为性能和标准的原因，一定会取代当前已有的一些动画库。正如某人曾说过的，能用 JS 写的东西，将来一定会用 JS 重写。
-
-以下是常用的API
-
-### Element.animate(frames, timing)
-frames 是一些动画帧的定义  
-timing 是一些时间控制选项  
-@returns player 动画控制器实例
-### player
-- player.playState 1.idle 2.running 3.paused 4.finished 5.pending
-- player.playbackRate
-- player.startTime
-- player.currentTime
-- player.onfinish
-- player.play()
-- player.pause()
-- player.reverse()
-- player.cancel()
-- player.finish()
 
 WAAPI 让我们能够构建动画并控制动画的播放。
 
 # 认识 Web Animations API
 WAAPI 向开发者开放了浏览器的动画引擎，开发者可以通过 Javascript 接口来操作该引擎。该 API 是基于 CSS 动画和 CSS 过渡实现的，并且考量了未来可能会增加的动画效果。它是 web 平台支持的实现动画的最高效的方式之一，在该方式下浏览器能够进行内部优化，因而不再需要所谓的黑科技、强制性的技巧和 requestAnimationFrame 方法。  
 
-通过 WAAPI，我们可以很大程度上将交互动画从样式转移到 JS 上，将行为与表现分离。我们不再需要依赖很多的 DOM 技巧来控制动画的播放，比如直接赋值 CSS 属性或者切换类型。并且与简单、声明式的 CSS 不同，JS 允许我们动态地改变样式属性或播放选项。对需要构建自定义动画库和开发动画接口的开发者来说，WAAPI 可能是最酷的工具了。让我们来看看它都可以做什么。  
+通过 WAAPI，我们可以很大程度上将交互动画从样式转移到 JS 上，将行为与表现分离。我们不再需要依赖很多的 DOM 技巧来控制动画的播放，比如直接赋值 CSS 属性或者切换类名。并且与简单、声明式的 CSS 不同，JS 允许我们动态地改变样式属性或播放选项。对需要构建自定义动画库和开发动画接口的开发者来说，WAAPI 可能是最酷的工具了。让我们来看看它都可以做什么。  
 
 # 浏览器支持
 不多说，直接上 can i use。
