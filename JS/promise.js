@@ -61,13 +61,13 @@ const promiseProto = {
                         if (utils.isFunction(onRejected)) {
                             try {
                                 ret = onRejected(reason)
-                                return resolve(ret)
                             } catch (e) {
                                 return reject(e)
                             }
                         } else {
-                            reject(reason)
+                            ret = reason
                         }
+                        return resolve(ret)
                     }
                 })
             })
