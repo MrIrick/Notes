@@ -44,10 +44,30 @@ const promiseProto = {
             process.nextTick(function () {
                 promise.handle({
                     onFulfilled: function (value) {
-                        resolve(utils.isFunction(onFulfilled) ? onFulfilled(value) : value)
+                        let ret
+                        if (utils.isFunction(onFulfilled)) {
+                            try {
+                                ret = onFulfilled(value)
+                            } catch (e) {
+                                return reject(e)
+                            }
+                        } else {
+                            ret = value
+                        }
+                        return resolve(ret)
                     },
                     onRejected: function (reason) {
-                        reject(utils.isFunction(onRejected) ? onRejected(reason) : reason)
+                        let ret
+                        if (utils.isFunction(onRejected)) {
+                            try {
+                                ret = onRejected(reason)
+                            } catch (e) {
+                                return reject(e)
+                            }
+                        } else {
+                            ret = reason
+                        }
+                        return resolve(ret)
                     }
                 })
             })
