@@ -101,7 +101,7 @@ const promiseProto = {
         let promise = this, done = false
 
         if (x === promise) {
-            promise.reject(new TypeError('The promise and value should not refer to the same object.'))
+            return promise.reject(new TypeError('The promise and value should not refer to the same object.'))
         } else if (x instanceof Promise) {
             return x.then(promise.resolve.bind(promise), promise.reject.bind(promise))
         } else if (utils.isObject(x)) {
