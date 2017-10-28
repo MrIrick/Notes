@@ -7,7 +7,8 @@ const utils = {
     isObject: function (x) {
         if (x == null) return false
         return typeof x === 'object' || typeof x === 'function';
-    }
+    },
+    delay: (process && process.nextTick) || setTimeout
 }
 
 const Promise = function (fn) {
@@ -41,61 +42,61 @@ const promiseProto = {
     then(onFulfilled, onRejected) {
         const promise = this
         return new Promise(function (resolve, reject) {
-            process.nextTick(function () {
-                promise.handle({
-                    onFulfilled: function (value) {
-                        let ret
-                        if (utils.isFunction(onFulfilled)) {
-                            try {
-                                ret = onFulfilled(value)
-                            } catch (e) {
-                                return reject(e)
-                            }
-                        } else {
-                            ret = value
-                        }
-                        return resolve(ret)
-                    },
-                    onRejected: function (reason) {
-                        let ret
-                        if (utils.isFunction(onRejected)) {
-                            try {
-                                ret = onRejected(reason)
-                            } catch (e) {
-                                return reject(e)
-                            }
-                        } else {
-                            ret = reason
-                        }
-                        return resolve(ret)
+            promise.handle({
+                onFulfilled: function (value) {
+                    if (!utils.isFunction(onFulfilled)) onFulfilled = function (v) {return v}
+                    try {
+                        resolve(onFulfilled(value))
+                    } catch (e) {
+                        return reject(e)
                     }
-                })
+                },
+                onRejected: function (reason) {
+                    if (!utils.isFunction(onRejected)) onRejected = function (r) {throw r}
+                    try {
+                        resolve(onRejected(reason))
+                    } catch (e) {
+                        return reject(e)
+                    }
+                }
             })
         })
     },
     handle(coupleHandlers) {
         let promise = this, state = this.state, value = this.value
         switch (state) {
-            case FULFILLED: return coupleHandlers.onFulfilled(value)
-            case REJECTED: return coupleHandlers.onRejected(value)
+            case FULFILLED: {
+                return utils.delay(function () {
+                    coupleHandlers.onFulfilled(value)
+                })
+            }
+            case REJECTED: {
+                return utils.delay(function () {
+                    coupleHandlers.onRejected(value)
+                })
+            }
             default: return promise.handlers.push(coupleHandlers)
         }
     },
     fulfill(value) {
-        this.state = FULFILLED
-        this.value = value
-        for (let {onFulfilled} of this.handlers) {
-            onFulfilled(value)
-        }
-        this.handlers = null
+        utils.delay(() => {
+            this.state = FULFILLED
+            this.value = value
+            for (let {onFulfilled} of this.handlers) {
+                onFulfilled(value)
+            }
+            this.handlers = null
+        })
     },
     reject(reason) {
-        this.state = REJECTED
-        this.value = reason
-        for (let {onRejected} of this.handlers) {
-            onRejected(reason)
-        }
-        this.handlers = null
+        utils.delay(() => {
+            this.state = REJECTED
+            this.value = reason
+            for (let {onRejected} of this.handlers) {
+                onRejected(reason)
+            }
+            this.handlers = null
+        })
     },
     resolve(x) {
         let promise = this, done = false
@@ -140,6 +141,15 @@ const promiseProto = {
             }
         }
     }
+}
+
+Promise.deferred = Promise.defer = function() {
+  const dfd = {}
+  dfd.promise = new Promise(function(resolve, reject) {
+    dfd.resolve = resolve
+    dfd.reject = reject
+  })
+  return dfd
 }
 
 Object.assign(Promise.prototype, promiseProto)
