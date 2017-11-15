@@ -2,19 +2,19 @@
 WAAPI 让我们能够构建动画并控制动画的播放。
 
 # 认识 Web Animations API
-WAAPI 向开发者开放了浏览器的动画引擎，开发者可以通过 Javascript 接口来操作该引擎。该 API 是基于 CSS 动画和 CSS 过渡实现的，并且考量了未来可能会增加的动画效果。它是 web 平台支持的实现动画的最高效的方式之一，在该方式下浏览器能够进行内部优化，因而不再需要所谓的黑科技、强制性的技巧和 requestAnimationFrame 方法。  
+WAAPI 向开发者开放了浏览器的动画引擎，开发者可以通过 Javascript 接口来操作该引擎。该 API 是基于 CSS 动画和 CSS 过渡实现的，并且考量了未来可能会增加的动画效果。它是 web 平台支持的实现动画的最高效的方式之一，在该方式下浏览器能够进行内部优化，因而不再需要所谓的黑科技、强制性的技巧和 requestAnimationFrame 方法。
 
 通过 WAAPI，我们可以很大程度上将交互动画从样式转移到 JS 上，将行为与表现分离。我们不再需要依赖很多的 DOM 技巧来控制动画的播放，比如直接赋值 CSS 属性或者切换类名。并且与简单、声明式的 CSS 不同，JS 允许我们动态地改变样式属性或播放选项。对需要构建自定义动画库和开发动画接口的开发者来说，WAAPI 可能是最酷的工具了。让我们来看看它都可以做什么。  
 
 # 浏览器支持
 不多说，直接上 can i use。
-http://caniuse.com/#search=web%20animations%20api  
+http://caniuse.com/#search=web%20animations%20api
 
 # 用 WAAPI 来写 CSS 动画
-对大多数 Web 开发者来说，CSS 动画是我们很熟悉的东西，因此学习 WAAPI 最好的方式莫过于从 CSS 动画开始。CSS 动画有着与 WAAPI 相似的语法，因此很适合作为我们讲解的开始。  
+对大多数 Web 开发者来说，CSS 动画是我们很熟悉的东西，因此学习 WAAPI 最好的方式莫过于从 CSS 动画开始。CSS 动画有着与 WAAPI 相似的语法，因此很适合作为我们讲解的开始。
 
 ### CSS 版本
-这是一个翻跟头（wut?）的动画，用 CSS 编写的，表现了爱丽丝坠入兔子洞从而进入仙境的场景（要看完整的代码请点击[codepen](http://codepen.io/rachelnabors/pen/QyOqqW)）：  
+这是一个翻跟头（wut?）的动画，用 CSS 编写的，表现了爱丽丝坠入兔子洞从而进入仙境的场景（要看完整的代码请点击[codepen](http://codepen.io/rachelnabors/pen/QyOqqW)）：
 
 ![爱丽丝梦游仙境](https://mdn.mozillademos.org/files/13843/tumbling-alice_optimized.gif)
 
@@ -28,7 +28,7 @@ http://caniuse.com/#search=web%20animations%20api
 @keyframes aliceTumbling {
   0% {
     color: #000;
-    transform: rotate(0) translate3D(-50%, -50%, 0);    
+    transform: rotate(0) translate3D(-50%, -50%, 0);
   }
   30% {
     color: #431236;
@@ -40,12 +40,12 @@ http://caniuse.com/#search=web%20animations%20api
 }
 ```
 
-这段代码的效果就是让爱丽丝身体的颜色和她自身的旋转以恒定的速率每3s完成一个循环。在 @keyframes 代码中我们可以看到，在动画进行到 30% 的时候，爱丽丝身体的颜色从黑色变成了深紫红色，随后 70% 的时间里，有逐渐变回黑色。  
+这段代码的效果就是让爱丽丝身体的颜色和她自身的旋转以恒定的速率每3s完成一个循环。在 @keyframes 代码中我们可以看到，在动画进行到 30% 的时候，爱丽丝身体的颜色从黑色变成了深紫红色，随后 70% 的时间里，有逐渐变回黑色。
 
 ### JS 版本
-现在让我们尝试一下，通过 WAAPI 来完成相同的动画。  
+现在让我们尝试一下，通过 WAAPI 来完成相同的动画。
 
-_刻画关键帧_  
+_刻画关键帧_
 首先我们需要创建与 CSS 关键帧一致的关键帧数组：
 
 ```js
@@ -56,16 +56,16 @@ var aliceTumbling = [
 ];
 ```
 
-这里我们使用了一个包含很多关键帧对象的数组。与 CSS 不同的是，WAAPI 不需要你通过百分比去指定每一帧发生的时间点，WAAPI 会自动将动画按照你定义的关键帧数量等分。这意味着一个关键帧数组如果包含了三个关键帧，中间的关键帧将呈现在整个动画过程的 50% 处。  
+这里我们使用了一个包含很多关键帧对象的数组。与 CSS 不同的是，WAAPI 不需要你通过百分比去指定每一帧发生的时间点，WAAPI 会自动将动画按照你定义的关键帧数量等分。这意味着一个关键帧数组如果包含了三个关键帧，中间的关键帧将呈现在整个动画过程的 50% 处。
 
-当我们想明确地设置某一帧的呈现时间时，可以直接在这一帧的对象中指定一个 `offset` 属性。在上面的例子中，为了确保爱丽丝身体的颜色在 30% 而不是 50% 的位置变成深紫红色，我们将这一帧的 `offset` 设置为 0.333。  
+当我们想明确地设置某一帧的呈现时间时，可以直接在这一帧的对象中指定一个 `offset` 属性。在上面的例子中，为了确保爱丽丝身体的颜色在 30% 而不是 50% 的位置变成深紫红色，我们将这一帧的 `offset` 设置为 0.3。
 
-显然，每一个动画过程必须包含两个或两个以上的关键帧，如果只定义了一个关键帧，WAAPI 会抛出一个 `NotSupportedError` 异常。  
+显然，每一个动画过程必须包含两个或两个以上的关键帧，如果只定义了一个关键帧，WAAPI 会抛出一个 `NotSupportedError` 异常。
 
-总结一下，除非你设置 `offset` 属性，否则动画过程会按照帧数等分。  
+总结一下，除非你设置 `offset` 属性，否则动画过程会按照帧数等分。
 
-_配置时序属性_  
-这里我们需要参照上面的 CSS 动画创建一个包含时序属性的对象（可以看作是 AnimationEffectTimingProperties 的一个实例）  
+_配置时序属性_
+这里我们需要参照上面的 CSS 动画创建一个包含时序属性的对象（可以看作是 AnimationEffectTimingProperties 的一个实例）
 ```js
 var aliceTiming = {
   duration: 3000,
@@ -74,11 +74,11 @@ var aliceTiming = {
 ```
 你可能会注意到，这里与 CSS 动画时序等价的 JS 时序表达有些许的不同：
 - `duration` 是以 mm(毫秒) 为单位的。
-- `iterations` 对应于 CSS 中的 `iteration-count`  
+- `iterations` 对应于 CSS 中的 `iteration-count`
 
-PS：其实 CSS 动画和 WAAPI 之间还有很多小的差异。比如说，WAAPI 不使用 'infinite' 字符串，而是使用 JS 中的关键字 `Infinity`。不使用 `animation-timing-function` 而是使用 `easing`。CSS 动画中 `animation-timing-function` 的默认值是 `ease`，而在 WAAPI 中，默认值是 `linear`。  
+PS：其实 CSS 动画和 WAAPI 之间还有很多小的差异。比如说，WAAPI 不使用 'infinite' 字符串，而是使用 JS 中的关键字 `Infinity`。不使用 `animation-timing-function` 而是使用 `easing`。CSS 动画中 `animation-timing-function` 的默认值是 `ease`，而在 WAAPI 中，默认值是 `linear`。
 
-_组合一下_  
+_组合一下_
 现在是时候把这两个配置用 `Element.animate()` 方法组合起来了：
 ```js
 document.getElementById("alice").animate(
@@ -87,9 +87,9 @@ document.getElementById("alice").animate(
 )
 ```
 
-动画效果在[这里](http://codepen.io/rachelnabors/pen/rxpmJL)  
+动画效果在[这里](http://codepen.io/rachelnabors/pen/rxpmJL)
 
-`animate()` 方法可以在任何的 DOM 元素上调用，CSS 能完成的 WAAPI 都可以完成。  
+`animate()` 方法可以在任何的 DOM 元素上调用，CSS 能完成的 WAAPI 都可以完成。
 
 还有，如果我们只想指定 `duration` 属性，可以直接传一个数字值：
 ```js
@@ -104,9 +104,9 @@ document.getElementById("alice").animate(
 # 使用 play(), pause(), reverse() 和 playbackRate 控制播放
 现在我们已经能用 WAAPI 写 CSS 动画了，不过，WAAPI 真正强大的地方在于，控制动画的播放。WAAPI 为此提供了几个非常有用的方法。让我们通过下面的爱丽丝变大变小动画来看一看如何暂停和播放动画（要看完整的代码请点击[codepen](http://codepen.io/rachelnabors/pen/PNYGZQ)）：
 
-![爱丽丝梦游仙境](https://mdn.mozillademos.org/files/13845/growing-shrinking_article_optimized.gif)  
+![爱丽丝梦游仙境](https://mdn.mozillademos.org/files/13845/growing-shrinking_article_optimized.gif)
 
-在这个游戏中，我们通过瓶子里的药水使爱丽丝变小，通过蛋糕使爱丽丝变大。  
+在这个游戏中，我们通过瓶子里的药水使爱丽丝变小，通过蛋糕使爱丽丝变大。
 
 ### 暂停和播放动画
 我们过会儿再讨论爱丽丝的动画，现在我们先来看蛋糕的动画：
@@ -114,7 +114,7 @@ document.getElementById("alice").animate(
 var nommingCake = document.getElementById('eat-me_sprite').animate(
 [
   { transform: 'translateY(0)' },
-  { transform: 'translateY(-80%)' }   
+  { transform: 'translateY(-80%)' }
 ], {
   fill: 'forwards',
   easing: 'steps(4, end)',
@@ -151,7 +151,7 @@ cake.addEventListener("touchstart", growAlice, false);
 PS：当然，你得在用户抬起鼠标或手指时，暂停播放动画，不然...
 
 ### 其他有用的方法
-除了暂停和播放，我们还可以用一下的方法：
+除了暂停和播放，我们还可以用以下的方法：
 - `Animation.finish()` 跳过动画过程，直接跳到动画的结束位置。
 - `Animation.cancel()` 取消动画过程，直接跳到动画的开始位置。
 - `Animation.reverse()` 设置动画的 `playbackRate` 属性为负值，即回放动画。
@@ -177,7 +177,7 @@ bottle.addEventListener("touchstart", shrinkAlice, false);
 setInterval( function() {
 
   if (redQueen_alice.playbackRate > .4) {
-    redQueen_alice.playbackRate *= .9;    
+    redQueen_alice.playbackRate *= .9;
   }
 
 }, 3000);
@@ -194,7 +194,7 @@ var goFaster = function() {
 document.addEventListener("click", goFaster);
 document.addEventListener("touchstart", goFaster);
 ```
-当你点击的时候，背景中的物体也会受到影响。当你让爱丽丝和红皇后的速度快一些时会发生什么呢？慢一些时呢？  
+当你点击的时候，背景中的物体也会受到影响。当你让爱丽丝和红皇后的速度快一些时会发生什么呢？慢一些时呢？
 
 # 获取动画的信息
 想想我们还可以如何利用 `playbackRate` 属性。比如通过允许放慢整个网站的动画速率来提高前庭功能障碍患者的可访问性。通过 CSS 来完成这项功能是不可能的，除非重新计算每个 CSS 动画规则中的 `duration` 属性。而通过 WAAPI，我们可以用即将到来的 `document.getAnimations()` 方法遍历页面中的每个动画并调整它们的 `playbackRate` 属性：
@@ -205,7 +205,7 @@ document.getAnimations().forEach(
   }
 );
 ```
-瞧，使用 WAAPI 的话，你需要做的全部就是改变一个数值而已。  
+瞧，使用 WAAPI 的话，你需要做的全部就是改变一个数值而已。
 
 另一个 CSS 动画难以独自完成的事情是，创建依赖于另一个动画的动画。举个例子，在爱丽丝变大变小的代码中，你可能注意到了这个奇怪的 `duration` 属性：
 ```js
@@ -216,19 +216,19 @@ duration: aliceChange.effect.timing.duration / 2
 var aliceChange = document.getElementById('alice').animate(
   [
     { transform: 'translate(-50%, -50%) scale(.5)' },
-    { transform: 'translate(-50%, -50%) scale(2)' }   
+    { transform: 'translate(-50%, -50%) scale(2)' }
   ], {
     duration: 8000,
     easing: 'ease-in-out',
     fill: 'both'
   });
 ```
-爱丽丝的动画是从原来身体大小的一半变成原来身体大小的两倍。我们先在动画开始的地方暂停：  
+爱丽丝的动画是从原来身体大小的一半变成原来身体大小的两倍。我们先在动画开始的地方暂停：
 ```js
 aliceChange.pause();
 ```
 
-现在她只有原来身体一半的大小，看起来就像已经喝下了整瓶的药水。我们想要的是，一开始身体处在正常的大小，这就需要动画过程已经进行到50%的位置。我们可以通过设置 `Animation.currentTime` 为 4000 来解决这个问题：  
+现在她只有原来身体一半的大小，看起来就像已经喝下了整瓶的药水。我们想要的是，一开始身体处在正常的大小，这就需要动画过程已经进行到50%的位置。我们可以通过设置 `Animation.currentTime` 为 4000 来解决这个问题：
 ```js
 aliceChange.currentTime = 4000;
 ```
@@ -238,14 +238,14 @@ aliceChange.currentTime = 4000;
 aliceChange.currentTime = aliceChange.effect.timing.duration / 2;
 ```
 
-通过 `effect` 属性，我们可以获取动画的关键帧对象和时序对象。`aliceChange.effect.timing` 指向爱丽丝动画的时序对象（`AnimationEffectTimingReadOnly` 的实例）—— 这个时序对象中包含了 `duration` 属性。我们可以将这个 `duration` 属性除以 2 之后赋值给 `aliceChange.currentTime`，使爱丽丝一开始是正常大小。  
+通过 `effect` 属性，我们可以获取动画的关键帧对象和时序对象。`aliceChange.effect.timing` 指向爱丽丝动画的时序对象（`AnimationEffectTimingReadOnly` 的实例）—— 这个时序对象中包含了 `duration` 属性。我们可以将这个 `duration` 属性除以 2 之后赋值给 `aliceChange.currentTime`，使爱丽丝一开始是正常大小。
 
-我们也可以用同样的方式设置蛋糕和药水动画的 `duration` 属性：  
+我们也可以用同样的方式设置蛋糕和药水动画的 `duration` 属性：
 ```js
 var drinking = document.getElementById('liquid').animate(
 [
   { height: '100%' },
-  { height: '0' }   
+  { height: '0' }
 ], {
   fill: 'forwards',
   duration: aliceChange.effect.timing.duration / 2
@@ -253,9 +253,9 @@ var drinking = document.getElementById('liquid').animate(
 drinking.pause();
 ```
 
-现在三个动画都链接到同一个 `duration`，我们每次只需要修改一处就可以了。  
+现在三个动画都链接到同一个 `duration`，我们每次只需要修改一处就可以了。
 
-我们还可以用 WAAPI 计算出动画的当前进度。当爱丽丝把蛋糕吃完或者把药水喝完，游戏就结束了。玩家看到的画面应该取决于爱丽丝动画的进度，不管是她变得太大而不能通过小门还是变得太小而不能拿到桌子上的钥匙。我们可以通过用 `aliceChange.effect.activeDuration` 切分 `Animation.currentTime` 从而计算出她处于什么状态，是最大、最小还是中间。  
+我们还可以用 WAAPI 计算出动画的当前进度。当爱丽丝把蛋糕吃完或者把药水喝完，游戏就结束了。玩家看到的画面应该取决于爱丽丝动画的进度，不管是她变得太大而不能通过小门还是变得太小而不能拿到桌子上的钥匙。我们可以通过用 `aliceChange.effect.activeDuration` 除 `Animation.currentTime` 从而计算出她处于什么状态，是最大、最小还是中间。
 ```js
 var endGame = function() {
 
@@ -278,7 +278,7 @@ var endGame = function() {
     ...
 
   } else {
-    // Alice didn't change significantly    
+    // Alice didn't change significantly
     ...
 
   }
@@ -290,7 +290,7 @@ CSS 动画和 CSS 过渡都有它们自己的事件监听，同样地，WAAPI �
 - `onfinish` 用于注册完成事件，并且可以通过 `finish()` 方法手动触发
 - `oncancel` 用于注册取消事件，并且可以通过 `cancel()` 方法手动触发
 
-这里我们为蛋糕、药水和爱丽丝注册完成事件，事件处理器指定为 `endGame` 函数：  
+这里我们为蛋糕、药水和爱丽丝注册完成事件，事件处理器指定为 `endGame` 函数：
 
 ```js
 // When the cake or runs out...

@@ -2,12 +2,12 @@ Web Components 是几项技术综合的结果：
 - Custom Elements
 - HTML Templates
 - Shadow DOM
-- HTML Imports  
+- HTML Imports
 
 下面将分别介绍这几项技术，同时在最后给出一个例子。
 
 # Custom Elements
-首先要定义一个类，这个类用来生成自定义的元素，所以这个类要继承 HTMLElement。如果是在已有元素的基础上扩展，则继承已有元素的构造函数（例如，在 button 的基础上进行扩展，需要继承 HTMLButtonElement）。 
+首先要定义一个类，这个类用来生成自定义的元素，所以这个类要继承 HTMLElement。如果是在已有元素的基础上扩展，则继承已有元素的构造函数（例如，在 button 的基础上进行扩展，需要继承 HTMLButtonElement）。
 
 使用类来定义自定义元素的好处在于，this 指向的就是 DOM 元素，因而通过 this 可以完成很多事，比如 this.children 获取子元素，查询后代元素 this.querySelector() 等等，只要是 DOM API，基本上都能使用。
 
@@ -127,11 +127,11 @@ console.assert(image.width === 150);
 console.assert(image.height === 200);
 ```
 
-### reflects HTML properties as HTML attributes （译为：将 HTML 特性反映到 HTML 属性中，用 `.` 访问的是特性，用 getAttribute 方法访问的是属性。）  
+### reflects HTML properties as HTML attributes
 
-几乎所有内置的 HTML 特性都会自动反映到属性上去，比如 `id`, `disabled` 等。为什么呢？因为属性在很多情况下是很有用的，比如 CSS 属性选择器就依赖于属性。
+几乎所有内置的 HTML properties 都会自动反映到 attributes 上去，比如 `id`, `disabled` 等。为什么呢？因为 attributes 在很多情况下是很有用的，比如 CSS 属性选择器就依赖于 attributes。
 
-当你想要保持元素的 DOM 表示跟它的 JS 状态同步的情况下，这种映射是非常有用的。一种情况是，用户为元素的某种状态定义了样式，而这样式是依赖于 HTML 属性的，当 JS 改变了元素的 HTML 特性，我们希望 HTML 属性也跟着改变，这样，用户定义的样式就能够顺利应用到元素上了：
+当你想要保持元素的 DOM 表示跟它的 JS 状态同步的情况下，这种映射是非常有用的。一种情况是，用户为元素的某种状态定义了样式，而这样式是依赖于 HTML attributes 的，当 JS 改变了元素的 HTML properties，我们希望 HTML attributes 也跟着改变，这样，用户定义的样式就能够顺利应用到元素上了：
 ```css
 app-drawer[disabled] {
   opacity: 0.5;
@@ -157,12 +157,12 @@ set disabled(val) {
 ```
 
 ### Observing changes to attributes
-HTML 属性是用户声明元素初始状态的得力帮手：
+HTML attributes 是用户声明元素初始状态的得力帮手：
 ```html
 <app-drawer open disabled></app-drawer>
 ```
 
-将 HTML 特性映射到 HTML 属性后，紧接着我们还可以监听 HTML 属性的变化来做一些工作。
+既然我们已经把 HTML properties 映射到 HTML attributes，紧接着我们还可以监听 HTML attributes 的变化来做一些工作。
 
 看这个例子：
 ```js
@@ -199,7 +199,7 @@ class AppDrawer extends HTMLElement {
   }
 }
 ```
-既然 HTML 特性能映射到 HTML 属性，HTML 属性就应该能映射到 HTML 特性，这个可以通过 attributeChangedCallback 来实现。
+既然 HTML properties 能映射到 HTML attributes，反过来 HTML attributes 就应该能映射到 HTML properties，这个可以通过 attributeChangedCallback 来实现。
 
 ### 渐进增强的 HTML
 
@@ -246,7 +246,7 @@ template 元素的 content 属性是一个 documentFragment，这意味着我们
 
 # Shadow DOM
 Shadow DOM 的出现是为了完成代码作用域的隔离，尤其是 CSS 的隔离。我们知道 CSS 样式是层叠的，也就是说当前页面里的每一个元素都可能会受到样式表中每一条规则的影响，有时候我们想避免这种影响，尤其是我们想写一个独立的组件时。我们希望使用组件的用户引入这个组件的时候，组件不会受已有样式的影响。想想这个隔离还是很有必要的。另外，JS 也是会被隔离的，比如当我们使用 document.querySelector 去搜索具备某些特征的元素时，shadowRoot 中的元素并不会被搜索，这样可以避免 DOM 的误操作。
-Shadow DOM 必须附加在一个元素上。这个元素可以是 HTML 中的某个元素，也可以是脚本动态创建出来的元素；可以是原生的元素，也可以是自定义元素。实际上只有以下列出的元素可以挂载 shadowRoot。  
+Shadow DOM 必须附加在一个元素上。这个元素可以是 HTML 中的某个元素，也可以是脚本动态创建出来的元素；可以是原生的元素，也可以是自定义元素。实际上只有以下列出的元素可以挂载 shadowRoot。
 
 自定义元素
 article aside blockquote body div header footer
@@ -257,7 +257,7 @@ nav p section span
 1. 浏览器已经为该元素创建了 shadowRoot(&lt;textarea&gt;, &lt;input&gt;)
 2. 为该元素创建 shadowRoot 没有意义(&lt;img&gt;)
 
-要改变 Shadow DOM 中元素的样式，可以在 Shadow DOM 中添加 style 标签，这里定义的样式通常情况下只能影响 shadowRoot 里的元素。  
+要改变 Shadow DOM 中元素的样式，可以在 Shadow DOM 中添加 style 标签，这里定义的样式通常情况下只能影响 shadowRoot 里的元素。
 还要注意的一点是，一旦一个元素挂载了 shadowRoot，它所有的子元素都将被隐藏掉。那是不是说子元素就没有任何的作用了呢，也不是。我们可以将子元素填充进 shadowRoot 中相应的占位符。
 
 创建 Shadow DOM 的语法如下：
@@ -265,23 +265,23 @@ nav p section span
 //@returns [object ShadowRoot]shadowRoot
 //shadowRootInit: {mode: 'open' | 'closed', delegatesFocus: true | false}
 const shadowRoot = Element.attachShadow(shadowRootInit)
-```  
+```
 
-这里详细说一下这两个选项：  
+这里详细说一下这两个选项：
 1. mode: open 代表开放的封装模式 closed 代表关闭的封装模式
 当 mode 为 closed 模式的时候，会产生以下效果：
 - Element.shadowRoot 获取不到 shadowRoot，值为 null
 - Element.assignedSlot / TextNode.assignedSlot 返回值为 null
 - 对于绑定在 shadowDOM 中元素上的事件，Event.composedPath() 返回值为 []
 简言之就是限制外部对 shadowDOM 的访问，但其实并没什么卵用，所以一般我们都不会使用 closed 模式。
- 
+
 delegatesFocus 为 true 的时候，有如下效果：
 - 如果你 click 了一个 shadowDOM 中的元素，而这个元素不是 focusable 的，那么 shadowDOM 中第一个 focusable 的元素会 focus
 - 当 shadowDOM 中的元素 focus 了，则宿主元素也将 focus （可通过 :focus 选择器匹配）
 
 在 shadowRoot 中，我们可以使用一种特殊的叫做 slot 的标签，实际上相当于占位符，其由 HTMLSlotElement 定义。slot 元素包含如下属性方法。
 - name 就是标识这个占位符的一个名字而已，将要分配给这个占位符的元素可以通过将自身的 slot 属性指定为这个名字，从而指定是要分配给哪个占位符。
-- assignedNodes(option) 返回分配给这个占位符的元素序列，如果没有分配，返回空数组。options 有一个 flatten 属性，默认为 false，设置为 true 时，会返回 slot 元素原先准备的 fallback 内容。  
+- assignedNodes(option) 返回分配给这个占位符的元素序列，如果没有分配，返回空数组。options 有一个 flatten 属性，默认为 false，设置为 true 时，会返回 slot 元素原先准备的 fallback 内容。
 
 每个 HTML 元素现在都有如下属性方法。
 - shadowRoot 指向该元素下挂载的 shadowRoot，如果元素没有挂载 shadowRoot，则该属性为 null。
@@ -321,9 +321,9 @@ document.activeElement.shadowRoot.activeElement
 |:host-context(<selector>)|如果宿主元素的祖先元素匹配括号中选择器，则整个选择器匹配宿主元素|NaN|
 |::slotted(<selector>)|匹配通过 slot 传进来的元素（只匹配顶级子元素，即子元素的子元素不会被匹配）|NaN|
 
-层叠规则，对于两个优先级相同的 CSS 声明，不带 !important 时，外部样式优先于内部样式，带 !important 时，内部样式优先于外部样式。这实际上是为了让外部样式能够控制内部样式，而内部样式又不至于失去控制权。  
+层叠规则，对于两个优先级相同的 CSS 声明，不带 !important 时，外部样式优先于内部样式，带 !important 时，内部样式优先于外部样式。这实际上是为了让外部样式能够控制内部样式，而内部样式又不至于失去控制权。
 
-继承，shadowRoot 中顶级元素的样式从宿主元素继承而来。  
+继承，shadowRoot 中顶级元素的样式从宿主元素继承而来。
 
 我们还可以通过 CSS 自定义属性为组件的使用者提供一些样式钩子：
 ```html
@@ -369,14 +369,14 @@ d.dispatchEvent(new Event('my-custom', {bubbles: true, composed: true}))
 - use css containment `:host {display: block;contain: content;}`
 - reset inheritable styles `:host {all: initial;}`
 
-# HTML Imports  
-HTML Imports 的目的是为 Web Components 提供打包机制。使用方法如下。  
+# HTML Imports
+HTML Imports 的目的是为 Web Components 提供打包机制。使用方法如下。
 ```html
 <link rel="import" href="...">
 ```
 注意，HTML Imports 受浏览器同源策略的限制。并且在引入的 HTML 中，script 标签里的 document 是指向主文档的 document 的，要获取引入的 HTML 的 document，可以使用 `document.currentScript.ownerDocument`。
 注意，在引入的 HTML 中不能使用以下方法。
-- document.open()  
+- document.open()
 - document.write()
 - document.close()
 
@@ -473,4 +473,4 @@ const elm = imported.querySelector('div.logo')
 
 最后再提一点，所有的自定义元素，默认是 inline 水平的。为什么是这样呢，其实包括所有的原生标签本来都是 inline 水平的，只是浏览器给某些元素设置了新的默认样式，比如 div，ul 等浏览器会默认给它们的 display 设置成 block。
 
-参考文章：http://www.tuicool.com/articles/iiue6zb  
+参考文章：http://www.tuicool.com/articles/iiue6zb

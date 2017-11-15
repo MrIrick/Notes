@@ -11,20 +11,26 @@
       overflow: hidden;
       cursor: pointer;
       border-radius: 3px;
+      user-select: none;
+      -webkit-tap-highlight-color: transparent;
     }
     .ripple {
       --dark-mask: rgba(0, 0, 0, 0.1);
-      transition: transform 0.5s ease;
+      top: calc(var(--top) * 1px);
+      left: calc(var(--left) * 1px);
+      transition: 0.8s transform ease, 0.5s 0.8s opacity ease;
       transform: scale(0);
-      width: 600px;
-      height: 600px;
+      width: calc(var(--side) * 1px);
+      height: calc(var(--side) * 1px);
       border-radius: 50%;
       background: var(--dark-mask);
       position: absolute;
       pointer-events: none;
+      opacity: 1;
     }
     .run {
       transform: scale(1);
+      opacity: 0;
     }
   </style>
   <div class="ripple-card">
@@ -47,12 +53,28 @@
       let div = document.createElement('div')
       div.classList.add('ripple')
       this.shadowRoot.querySelector('.ripple-card').append(div)
-      div.style.top = `${y - div.clientHeight / 2}px`
-      div.style.left = `${x - div.clientWidth / 2}px`
+
+      const {clientHeight, clientWidth} = div
+
+      div.style.setProperty('--top', y - clientHeight / 2)
+      div.style.setProperty('--left', x - clientWidth / 2)
+      div.style.setProperty('--side', 2 * Math.sqrt(Math.max(x, clientWidth - x) ** 2 + Math.max(y, clientHeight - y) ** 2))
       div.classList.add('run')
-      div.addEventListener('transitionend', e => div.remove())
+      div.addEventListener('transitionend', doubleCall(() => { div.remove() }))
     }
   }
 
   customElements.define('ripple-card', RippleCard)
+
+  function doubleCall (fn) {
+    let count = 0
+    return function (...args) {
+      if (!count) {
+        count++
+        return
+      }
+      fn(...args)
+      count = 0
+    }
+  }
 </script>
