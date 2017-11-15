@@ -1,0 +1,58 @@
+<template id="ripple-card-tpl">
+  <style>
+    .ripple-card {
+      width: 300px;
+      height: 200px;
+      background: #ccc;
+      padding: 30px;
+      box-sizing: border-box;
+      color: #fff;
+      position: relative;
+      overflow: hidden;
+      cursor: pointer;
+      border-radius: 3px;
+    }
+    .ripple {
+      --dark-mask: rgba(0, 0, 0, 0.1);
+      transition: transform 0.5s ease;
+      transform: scale(0);
+      width: 600px;
+      height: 600px;
+      border-radius: 50%;
+      background: var(--dark-mask);
+      position: absolute;
+      pointer-events: none;
+    }
+    .run {
+      transform: scale(1);
+    }
+  </style>
+  <div class="ripple-card">
+    <slot></slot>
+  </div>
+</template>
+
+<script>
+  const root = document.currentScript.ownerDocument
+
+  class RippleCard extends HTMLElement {
+    constructor () {
+      super()
+      const shadow = this.attachShadow({mode: 'open'})
+      shadow.append(root.getElementById('ripple-card-tpl').content)
+      this.addEventListener('click', e => this.drawRipple(e.offsetX, e.offsetY))
+    }
+
+    drawRipple (x, y) {
+      let div = document.createElement('div')
+      div.classList.add('ripple')
+      this.shadowRoot.querySelector('.ripple-card').append(div)
+      div.style.top = `${y - div.clientHeight / 2}px`
+      div.style.left = `${x - div.clientWidth / 2}px`
+      div.classList.add('run')
+      div.addEventListener('transitionend', e => div.remove())
+    }
+  }
+
+  customElements.define('ripple-card', RippleCard)
+</script>
