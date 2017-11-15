@@ -24,7 +24,7 @@ ctx.bezierCurveTo(cp1x, cp1y, cp2x, cp2y, x, y)
 ```js
 //储存合并路径
 new Path2D()
-Path2D.prototype.addPath(path[, transform]) //chrome尚未实现
+Path2D.prototype.addPath(path[, transform])
 ```
 
 # 样式与颜色
@@ -73,7 +73,7 @@ ctx.direction //ltr, rtl, inherit(default)
 ctx.fillText(text, x, y[, maxWidth])
 ctx.strokeText(text, x, y[, maxWidth])
 ctx.measureText(String tomeasure) //测量文本
-```  
+```
 # 应用图像
 ```js
 /**
@@ -106,9 +106,9 @@ ctx.resetTransform()
 # 组合
 ```js
 ctx.globalCompositeOperation
-//source-over(default) destination-over 
-//source-in destination-in 
-//source-out destination-out 
+//source-over(default) destination-over
+//source-in destination-in
+//source-out destination-out
 //source-atop destination-atop
 //lighter darken
 //xor copy
