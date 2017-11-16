@@ -387,7 +387,7 @@ const imported = link.import
 const elm = imported.querySelector('div.logo')
 ```
 
-### 综合示例
+### 综合示例(目前还没有浏览器支持 Custom Elements v1下的 Customized built-in elements，所以这里用了 v0 的语法)
 ```html
 <!DOCTYPE html>
 <html lang="en">
